@@ -177,7 +177,7 @@ func (b *ContainerBackup) Restore() error {
 			return err
 		}
 		path := strings.Split(th.Name, "/")
-		if len(path) <= 2 { // no directory
+		if len(path) < 2 { // no directory
 			continue
 		}
 		destVolume := trans[path[0]]
@@ -195,6 +195,12 @@ func (b *ContainerBackup) Restore() error {
 			return err
 		}
 		if _, err := io.Copy(file, tr); err != nil {
+			return err
+		}
+		if err := os.Chown(abs, th.Uid, th.Gid); err != nil {
+			return err
+		}
+		if err := os.Chmod(abs, os.FileMode(th.Mode)); err != nil {
 			return err
 		}
 	}

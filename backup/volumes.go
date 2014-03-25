@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 )
 
 const (
@@ -48,6 +49,10 @@ func (v *containerVolume) addFile(path string, info os.FileInfo, err error) erro
 		return err
 	}
 	th.Name = relPath
+	if si, ok := info.Sys().(*syscall.Stat_t); ok {
+		th.Uid = int(si.Uid)
+		th.Gid = int(si.Gid)
+	}
 
 	if err := v.tw.WriteHeader(th); err != nil {
 		return err
