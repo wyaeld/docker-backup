@@ -1,8 +1,7 @@
 # Backup and Restore Docker Volume Containers
 
-For general documentation on how to use volume containers, see:
-http://docs.docker.io/en/latest/use/working_with_volumes/#creating-and-mounting-a-data-volume-container
-
+This tool gets the [volume container](http://docs.docker.io/en/latest/use/working_with_volumes/#creating-and-mounting-a-data-volume-container) of a given container and writes the volume container's json and all volumes found to a tarball.
+After that, this tool can be used to restore a volume container from that tarball.
 
 Let say you have a container named `mysql-data` to keep `/var/lib/mysql`. You start up your mysql server by running:
 
@@ -16,4 +15,8 @@ Backup that data container:
 Restore it on a new system:
 
     $ docker-backup restore mysql-server mysql-server-backup.tar
+
+
+For general documentation on how to use volume containers, see:
+http://docs.docker.io/en/latest/use/working_with_volumes/#creating-and-mounting-a-data-volume-container
 
