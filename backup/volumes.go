@@ -34,16 +34,8 @@ func (v *containerVolume) addFile(path string, info os.FileInfo, err error) erro
 	if err != nil {
 		return err
 	}
-	if info.Mode().IsDir() {
-		return nil
-	}
 
 	relPath := path[len(filepath.Dir(v.hostPath))+1:] // relative to volume parent directory (<docker>/vfs/dir/)
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-
 	th, err := tar.FileInfoHeader(info, relPath)
 	if err != nil {
 		return err
@@ -58,8 +50,14 @@ func (v *containerVolume) addFile(path string, info os.FileInfo, err error) erro
 		return err
 	}
 
-	if _, err := io.Copy(v.tw, file); err != nil {
-		return err
+	if !info.Mode().IsDir() {
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(v.tw, file); err != nil {
+			return err
+		}
 	}
 	return nil
 }

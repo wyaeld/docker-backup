@@ -177,7 +177,7 @@ func (b *ContainerBackup) Restore() error {
 			return err
 		}
 		path := strings.Split(th.Name, "/")
-		if len(path) < 2 { // no directory
+		if len(path) == 1 && th.Typeflag != tar.TypeDir { // ignore files right on root
 			continue
 		}
 		destVolume := trans[path[0]]
@@ -186,16 +186,19 @@ func (b *ContainerBackup) Restore() error {
 		}
 
 		path[0] = destVolume
-		abs := filepath.Join(path...) //destVolume, path[1:]...)
-		if err := os.MkdirAll(filepath.Dir(abs), 0755); err != nil {
-			return err
-		}
-		file, err := os.Create(abs)
-		if err != nil {
-			return err
-		}
-		if _, err := io.Copy(file, tr); err != nil {
-			return err
+		abs := filepath.Join(path...)
+		if th.Typeflag == tar.TypeDir {
+			if err := os.MkdirAll(abs, 0755); err != nil {
+				return err
+			}
+		} else {
+			file, err := os.Create(abs)
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(file, tr); err != nil {
+				return err
+			}
 		}
 		if err := os.Chown(abs, th.Uid, th.Gid); err != nil {
 			return err
