@@ -54,11 +54,16 @@ func (b *ContainerBackup) Store(containerId string) error {
 		return err
 	}
 
-	if container.Config.VolumesFrom == "" {
+	switch len(container.HostConfig.VolumesFrom) {
+	case 0:
 		return errors.New("Couldn't find data container")
+	case 1:
+		break
+	default:
+		return errors.New("Only containers with one data volume container are support right now")
 	}
 
-	volumeContainer, volumeContainerJson, err := b.getContainer(container.Config.VolumesFrom)
+	volumeContainer, volumeContainerJson, err := b.getContainer(container.HostConfig.VolumesFrom[0])
 	if err != nil {
 		return err
 	}
