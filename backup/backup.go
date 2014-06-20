@@ -17,11 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dotcloud/docker/api"
+	"github.com/dotcloud/docker/daemon"
 )
 
 type container struct {
-	api.Container
+	daemon.Container
 	Name    string            `json:"Name"`
 	Volumes map[string]string `json:"Volumes"`
 }
