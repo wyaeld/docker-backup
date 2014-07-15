@@ -17,13 +17,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dotcloud/docker/daemon"
+	"github.com/dotcloud/docker/runconfig"
 )
 
 type container struct {
-	daemon.Container
-	Name    string            `json:"Name"`
-	Volumes map[string]string `json:"Volumes"`
+	Config     runconfig.Config
+	HostConfig runconfig.HostConfig
+	Name       string            `json:"Name"`
+	Volumes    map[string]string `json:"Volumes"`
 }
 
 type containerResponse struct {
