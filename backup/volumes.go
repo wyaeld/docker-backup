@@ -16,6 +16,7 @@ type containerVolume struct {
 	path     string
 	hostPath string
 	tw       *tar.Writer
+	size     uint
 }
 
 func newContainerVolume(path, hostPath string, tw *tar.Writer) *containerVolume {
@@ -26,8 +27,8 @@ func newContainerVolume(path, hostPath string, tw *tar.Writer) *containerVolume 
 	}
 }
 
-func (v *containerVolume) Store() error {
-	return filepath.Walk(v.hostPath, v.addFile)
+func (v *containerVolume) Store() (uint, error) {
+	return v.size, filepath.Walk(v.hostPath, v.addFile)
 }
 
 func (v *containerVolume) addFile(path string, info os.FileInfo, err error) error {
@@ -55,9 +56,11 @@ func (v *containerVolume) addFile(path string, info os.FileInfo, err error) erro
 		if err != nil {
 			return err
 		}
-		if _, err := io.Copy(v.tw, file); err != nil {
+		n, err := io.Copy(v.tw, file)
+		if err != nil {
 			return err
 		}
+		v.size = v.size + uint(n)
 	}
 	return nil
 }

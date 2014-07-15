@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/discordianfish/docker-backup/backup"
 )
@@ -14,8 +16,9 @@ const (
 )
 
 var (
-	addr  = flag.String("addr", defaultAddr, "address to connect to")
-	proto = flag.String("proto", defaultProto, "protocol to use (unix, tcp)")
+	addr    = flag.String("addr", defaultAddr, "address to connect to")
+	proto   = flag.String("proto", defaultProto, "protocol to use (unix, tcp)")
+	metrics = flag.Bool("metrics", false, "print some metrics for prometheus consumption")
 )
 
 func main() {
@@ -28,6 +31,7 @@ func main() {
 	action := flag.Arg(0)
 	filename := flag.Arg(1)
 
+	begin := time.Now()
 	switch action {
 	case "store":
 		if flag.NArg() < 3 {
@@ -40,8 +44,15 @@ func main() {
 			log.Fatal(err)
 		}
 		b := backup.NewBackup(*addr, *proto, file)
-		if err := b.Store(containerId); err != nil {
+		n, err := b.Store(containerId)
+		if err != nil {
 			log.Fatal(err)
+		}
+
+		if *metrics {
+			now := time.Now()
+			fmt.Printf("duration_store{container=\"%s\"} %f %d\n", containerId, time.Since(begin).Seconds(), now.Unix())
+			fmt.Printf("bytes_stored{container=\"%s\"} %d %d\n", containerId, n, now.Unix())
 		}
 	case "restore":
 		log.Printf("Restoring %s", filename)
