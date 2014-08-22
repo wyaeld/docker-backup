@@ -10,11 +10,11 @@ Let say you have a container named `mysql-data` to keep `/var/lib/mysql`. You st
 
 Backup that data container:
 
-    $ docker-backup store mysql-server mysql-server-backup.tar
+    $ docker-backup store mysql-server-backup.tar mysql-server
 
 Restore it on a new system:
 
-    $ docker-backup restore mysql-server mysql-server-backup.tar
+    $ docker-backup restore mysql-server-backup.tar
 
 
 For general documentation on how to use volume containers, see:
