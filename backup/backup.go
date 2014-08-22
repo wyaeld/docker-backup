@@ -50,27 +50,32 @@ func NewBackup(addr, proto string, rw io.ReadWriteSeeker) *ContainerBackup {
 
 func (b *ContainerBackup) Store(containerId string) (uint, error) {
 	tw := tar.NewWriter(b.rw)
-	container, _, err := b.getContainer(containerId)
+	container, containerJson, err := b.getContainer(containerId)
 	if err != nil {
 		return 0, err
 	}
 
-	switch len(container.HostConfig.VolumesFrom) {
-	case 0:
-		return 0, errors.New("Couldn't find data container")
-	case 1:
-		break
-	default:
-		return 0, errors.New("Only containers with one data volume container are support right now")
+	if len(container.Volumes) > 0 {
+		// The container is a data container itself
+	} else {
+		// Try to find the data container for this container
+		switch len(container.HostConfig.VolumesFrom) {
+		case 0:
+			return 0, errors.New("Couldn't find data container")
+		case 1:
+			break
+		default:
+			return 0, errors.New("Only containers with one data volume container are support right now")
+		}
+		container, containerJson, err = b.getContainer(container.HostConfig.VolumesFrom[0])
+		if err != nil {
+			return 0, err
+		}
 	}
 
-	volumeContainer, volumeContainerJson, err := b.getContainer(container.HostConfig.VolumesFrom[0])
-	if err != nil {
-		return 0, err
-	}
 	th := &tar.Header{
 		Name:       volumeContainerFilename,
-		Size:       int64(len(volumeContainerJson)),
+		Size:       int64(len(containerJson)),
 		ModTime:    b.ts,
 		AccessTime: b.ts,
 		ChangeTime: b.ts,
@@ -79,12 +84,12 @@ func (b *ContainerBackup) Store(containerId string) (uint, error) {
 	if err := tw.WriteHeader(th); err != nil {
 		return 0, err
 	}
-	if _, err := tw.Write(volumeContainerJson); err != nil {
+	if _, err := tw.Write(containerJson); err != nil {
 		return 0, err
 	}
 
 	n := uint(0)
-	for path, hostPath := range volumeContainer.Volumes {
+	for path, hostPath := range container.Volumes {
 		volume := newContainerVolume(path, hostPath, tw)
 		nl, err := volume.Store()
 		if err != nil {
